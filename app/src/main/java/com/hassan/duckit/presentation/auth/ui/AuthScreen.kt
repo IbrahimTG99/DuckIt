@@ -28,13 +28,13 @@ fun AuthScreen(
 
     if (uiState.isAuthenticated) {
         AccountContent(
-            onAction = viewModel::onEvent,
+            onAction = viewModel::onAction,
             onNavigateBack = onNavigateBack
         )
     } else {
         AuthContent(
             uiState = uiState,
-            onAction = viewModel::onEvent,
+            onAction = viewModel::onAction,
             onNavigateBack = onNavigateBack
         )
     }
