@@ -6,7 +6,10 @@ import com.hassan.duckit.domain.repository.AuthRepository
 import com.hassan.duckit.util.Validation
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -17,14 +20,17 @@ class AuthViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AuthScreenState())
-    val uiState = _uiState.asStateFlow()
+    val uiState = _uiState
+        .onStart {
+            checkAuthStatus()
+        }.stateIn(
+            viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000L),
+            initialValue = AuthScreenState(isLoading = true)
+        )
 
     private val _authScreenEvent = MutableStateFlow<AuthScreenEvent>(AuthScreenEvent.None)
     val authScreenEvent = _authScreenEvent.asStateFlow()
-
-    init {
-        checkAuthStatus()
-    }
 
     private fun checkAuthStatus() {
         viewModelScope.launch {
@@ -35,7 +41,7 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    fun onEvent(action: AuthScreenAction) {
+    fun onAction(action: AuthScreenAction) {
         when (action) {
             is AuthScreenAction.SignIn -> signIn(action.email, action.password)
             is AuthScreenAction.SignUp -> signUp(action.email, action.password)
